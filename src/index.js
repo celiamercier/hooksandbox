@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 //import UseEffectUnmountDemo from './components/UseEffectUnmountDemo';
 //import App from './App';
-import FetchPaginateComponentClass from './components/pagination/FetchPaginateComponentClass';
+//import FetchPaginateComponentClass from './components/pagination/FetchPaginateComponentClass';
+import FetchPaginateFunctionalComponent from './components/pagination/FetchPaginateFunctionalComponent';
 
 ReactDOM.render(
   <React.StrictMode>
-    <FetchPaginateComponentClass />
+    <FetchPaginateFunctionalComponent />
   </React.StrictMode>,
   document.getElementById('root')
 );
