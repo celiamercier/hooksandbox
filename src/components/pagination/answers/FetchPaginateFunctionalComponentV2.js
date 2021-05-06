@@ -1,19 +1,23 @@
 import {Button, ButtonGroup, Col, Container, Form, Row} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faAngleLeft, faAngleRight} from '@fortawesome/free-solid-svg-icons';
-import ProductTable from './table/ProductTable';
+import ProductTable from '../table/ProductTable';
 import React, {useEffect, useState} from 'react';
-import fetchProducts from './mock/fetchProducts';
+import fetchProducts from '../mock/fetchProducts';
+
+import '../FetchPaginateStyle.css';
 
 const INITIAL_PAGE_SIZE = 5;
 
 const canGoToPreviousPage = (offset) => offset === 0;
 const canGoToNextPage = (offset, pageSize, totalNumberOfProducts) => offset + pageSize >= totalNumberOfProducts;
 
-export default function FetchPaginateFunctionalComponent() {
+export default function FetchPaginateFunctionalComponentV2() {
 
-    const [ offset, setOffset ] = useState(0);
-    const [ pageSize, setPageSize ] = useState(INITIAL_PAGE_SIZE);
+    const [ pagination, setPagination ] = useState({
+        offset: 0,
+        pageSize: INITIAL_PAGE_SIZE,
+    });
     const [ totalNumberOfProducts, setTotalNumberOfProducts ] = useState(0);
     const [ products, setProducts ] = useState([]);
     const [ isFetchingProducts, setIsFetchingProducts ] = useState(false);
@@ -21,7 +25,7 @@ export default function FetchPaginateFunctionalComponent() {
     useEffect(() => {
         const fetch = () => {
             setIsFetchingProducts(true);
-            fetchProducts(offset, pageSize)
+            fetchProducts(pagination.offset, pagination.pageSize)
                 .then((result) => {
                     setProducts(result.products);
                     setTotalNumberOfProducts(result.totalCount);
@@ -31,18 +35,27 @@ export default function FetchPaginateFunctionalComponent() {
                 });
         };
         fetch();
-    }, [offset, pageSize]);
+    }, [pagination]);
 
     const goToPreviousPage = () => {
-        setOffset((prevOffset) => Math.max(0, prevOffset - pageSize));
+        setPagination((prevPagination) => ({
+            ...prevPagination,
+            offset: Math.max(0, prevPagination.offset - prevPagination.pageSize),
+        }));
     }
 
     const goToNextPage = () => {
-        setOffset((prevOffset) => Math.min(totalNumberOfProducts, prevOffset + pageSize));
+        setPagination((prevPagination) => ({
+            ...prevPagination,
+            offset: Math.min(totalNumberOfProducts, prevPagination.offset + prevPagination.pageSize),
+        }));
     }
 
     const updatePageSize = (newSize) => {
-        setPageSize(newSize);
+        setPagination((prevPagination) => ({
+            ...prevPagination,
+            pageSize: newSize,
+        }));
     }
 
     console.log('render');
@@ -50,23 +63,23 @@ export default function FetchPaginateFunctionalComponent() {
         <Container className="main-container p-5">
             <Row className="pb-4">
                 <Col>
-                    <h3>Component Class Example</h3>
+                    <h3>Functional Component Example</h3>
                 </Col>
             </Row>
             <Row className="pb-4">
                 <Col>
                     <Form inline>
-                        <span className="mr-3">{offset + 1} - {Math.min(offset + pageSize, totalNumberOfProducts)} of {totalNumberOfProducts} results</span>
+                        <span className="mr-3">{pagination.offset + 1} - {Math.min(pagination.offset + pagination.pageSize, totalNumberOfProducts)} of {totalNumberOfProducts} results</span>
                         <ButtonGroup className="mr-3">
                             <Button variant='primary'
                                     onClick={goToPreviousPage}
-                                    disabled={canGoToPreviousPage(offset)}
+                                    disabled={canGoToPreviousPage(pagination.offset)}
                             >
                                 <FontAwesomeIcon icon={faAngleLeft} />
                             </Button>
                             <Button variant='primary'
                                     onClick={goToNextPage}
-                                    disabled={canGoToNextPage(offset, pageSize, totalNumberOfProducts)}
+                                    disabled={canGoToNextPage(pagination.offset, pagination.pageSize, totalNumberOfProducts)}
                             >
                                 <FontAwesomeIcon icon={faAngleRight} />
                             </Button>
