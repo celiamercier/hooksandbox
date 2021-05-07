@@ -2,40 +2,18 @@ import {Button, ButtonGroup, Col, Container, Form, Row} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faAngleLeft, faAngleRight} from '@fortawesome/free-solid-svg-icons';
 import ProductTable from '../table/ProductTable';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import fetchProducts from '../mock/fetchProducts';
 
 import '../FetchPaginateStyle.css';
 
 const INITIAL_PAGE_SIZE = 5;
 
-const canGoToPreviousPage = (offset) => offset === 0;
-const canGoToNextPage = (offset, pageSize, totalNumberOfProducts) => offset + pageSize >= totalNumberOfProducts;
-
-export default function FetchPaginateFunctionalComponentV2() {
-
+function usePagination(totalNumberOfItems) {
     const [ pagination, setPagination ] = useState({
         offset: 0,
         pageSize: INITIAL_PAGE_SIZE,
     });
-    const [ totalNumberOfProducts, setTotalNumberOfProducts ] = useState(0);
-    const [ products, setProducts ] = useState([]);
-    const [ isFetchingProducts, setIsFetchingProducts ] = useState(false);
-
-    useEffect(() => {
-        const fetch = () => {
-            setIsFetchingProducts(true);
-            fetchProducts(pagination.offset, pagination.pageSize)
-                .then((result) => {
-                    setProducts(result.products);
-                    setTotalNumberOfProducts(result.totalCount);
-                })
-                .finally(() => {
-                    setIsFetchingProducts(false);
-                });
-        };
-        fetch();
-    }, [pagination]);
 
     const goToPreviousPage = () => {
         setPagination((prevPagination) => ({
@@ -47,16 +25,79 @@ export default function FetchPaginateFunctionalComponentV2() {
     const goToNextPage = () => {
         setPagination((prevPagination) => ({
             ...prevPagination,
-            offset: Math.min(totalNumberOfProducts, prevPagination.offset + prevPagination.pageSize),
+            offset: Math.min(totalNumberOfItems, prevPagination.offset + prevPagination.pageSize),
         }));
     }
 
-    const updatePageSize = (newSize) => {
+    const updatePageSize = (pageSize) => {
         setPagination((prevPagination) => ({
             ...prevPagination,
-            pageSize: newSize,
+            pageSize,
         }));
     }
+
+    const canGoToPreviousPage = () => pagination.offset === 0;
+
+    const canGoToNextPage = () => pagination.offset + pagination.pageSize >= totalNumberOfItems;
+
+    return {
+        pagination,
+        updatePageSize,
+        goToPreviousPage,
+        goToNextPage,
+        canGoToPreviousPage,
+        canGoToNextPage,
+    };
+}
+
+function useAsyncFetch(fetchCallback, itemsSelector) {
+    const [ totalCount, setTotalCount ] = useState(0);
+    const [ items, setItems ] = useState([]);
+    const [ isFetchingProducts, setIsFetchingProducts ] = useState(false);
+
+    const fetch = useCallback((offset, pageSize) => {
+        setIsFetchingProducts(true);
+        fetchCallback(offset, pageSize)
+            .then((result) => {
+                setItems(itemsSelector(result));
+                setTotalCount(result.totalCount);
+            })
+            .finally(() => {
+                setIsFetchingProducts(false);
+            });
+    }, [fetchCallback, itemsSelector]);
+
+    return {
+        fetch,
+        isFetchingProducts,
+        page: {
+            items,
+            totalCount,
+        },
+    };
+}
+
+const productSelector = (result) => result.products;
+
+export default function FetchPaginateFunctionalComponentV2() {
+
+    const {
+              fetch,
+              isFetchingProducts,
+              page,
+          } = useAsyncFetch(fetchProducts, productSelector);
+
+    const { pagination,
+              updatePageSize,
+              goToPreviousPage,
+              goToNextPage,
+              canGoToPreviousPage,
+              canGoToNextPage,
+          } = usePagination(page.totalCount);
+
+    useEffect(() => {
+        fetch(pagination.offset, pagination.pageSize);
+    }, [fetch, pagination]);
 
     console.log('render');
     return (
@@ -69,7 +110,7 @@ export default function FetchPaginateFunctionalComponentV2() {
             <Row className="pb-4">
                 <Col>
                     <Form inline>
-                        <span className="mr-3">{pagination.offset + 1} - {Math.min(pagination.offset + pagination.pageSize, totalNumberOfProducts)} of {totalNumberOfProducts} results</span>
+                        <span className="mr-3">{pagination.offset + 1} - {Math.min(pagination.offset + pagination.pageSize, page.totalCount)} of {page.totalCount} results</span>
                         <ButtonGroup className="mr-3">
                             <Button variant='primary'
                                     onClick={goToPreviousPage}
@@ -79,7 +120,7 @@ export default function FetchPaginateFunctionalComponentV2() {
                             </Button>
                             <Button variant='primary'
                                     onClick={goToNextPage}
-                                    disabled={canGoToNextPage(pagination.offset, pagination.pageSize, totalNumberOfProducts)}
+                                    disabled={canGoToNextPage(pagination.offset, pagination.pageSize, page.totalCount)}
                             >
                                 <FontAwesomeIcon icon={faAngleRight} />
                             </Button>
@@ -96,7 +137,7 @@ export default function FetchPaginateFunctionalComponentV2() {
             </Row>
             <Row>
                 <Col>
-                    <ProductTable products={products} isLoading={isFetchingProducts} />
+                    <ProductTable products={page.items} isLoading={isFetchingProducts} />
                 </Col>
             </Row>
         </Container>

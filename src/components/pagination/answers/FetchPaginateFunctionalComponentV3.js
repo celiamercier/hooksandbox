@@ -2,46 +2,72 @@ import {Button, ButtonGroup, Col, Container, Form, Row} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faAngleLeft, faAngleRight} from '@fortawesome/free-solid-svg-icons';
 import ProductTable from '../table/ProductTable';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useReducer, useState} from 'react';
 import fetchProducts from '../mock/fetchProducts';
 
 import '../FetchPaginateStyle.css';
 
 const INITIAL_PAGE_SIZE = 5;
 
+const PREVIOUS_PAGE = "action/previous-page";
+const NEXT_PAGE = "action/next-page";
+const UPDATE_PAGE_SIZE = "action/update-page-size";
+
+const paginationReducer = (state, action) => {
+    switch (action.type) {
+        case PREVIOUS_PAGE:
+            return {
+                ...state,
+                offset: Math.max(0, state.offset - state.pageSize),
+            };
+        case NEXT_PAGE:
+            return {
+                ...state,
+                offset: Math.min(action.totalNumberOfItems, state.offset + state.pageSize),
+            };
+        case UPDATE_PAGE_SIZE:
+            return {
+                ...state,
+                pageSize: action.newSize,
+            };
+        default:
+            throw new Error(`unknown action ${action}`);
+    }
+};
+
 function usePagination(totalNumberOfItems) {
-    const [ pagination, setPagination ] = useState({
+    const [state, dispatch] = useReducer(paginationReducer, {
         offset: 0,
         pageSize: INITIAL_PAGE_SIZE,
     });
 
     const goToPreviousPage = () => {
-        setPagination((prevPagination) => ({
-            ...prevPagination,
-            offset: Math.max(0, prevPagination.offset - prevPagination.pageSize),
-        }));
+        dispatch({
+            type: PREVIOUS_PAGE,
+            totalNumberOfItems
+        });
     }
 
     const goToNextPage = () => {
-        setPagination((prevPagination) => ({
-            ...prevPagination,
-            offset: Math.min(totalNumberOfItems, prevPagination.offset + prevPagination.pageSize),
-        }));
+        dispatch({
+            type: NEXT_PAGE,
+            totalNumberOfItems
+        });
     }
 
-    const updatePageSize = (pageSize) => {
-        setPagination((prevPagination) => ({
-            ...prevPagination,
-            pageSize,
-        }));
+    const updatePageSize = (newSize) => {
+        dispatch({
+            type: UPDATE_PAGE_SIZE,
+            newSize
+        });
     }
 
-    const canGoToPreviousPage = () => pagination.offset === 0;
+    const canGoToPreviousPage = () => state.offset === 0;
 
-    const canGoToNextPage = () => pagination.offset + pagination.pageSize >= totalNumberOfItems;
+    const canGoToNextPage = () => state.offset + state.pageSize >= totalNumberOfItems;
 
     return {
-        pagination,
+        pagination: state,
         updatePageSize,
         goToPreviousPage,
         goToNextPage,
