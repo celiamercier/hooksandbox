@@ -20,21 +20,20 @@ export default function FetchPaginateFunctionalComponentV1() {
     const [ products, setProducts ] = useState([]);
     const [ isFetchingProducts, setIsFetchingProducts ] = useState(false);
 
-    const fetch = () => {
-        setIsFetchingProducts(true);
-        fetchProducts(offset, pageSize)
-            .then((result) => {
-                setProducts(result.products);
-                setTotalNumberOfProducts(result.totalCount);
-            })
-            .finally(() => {
-                setIsFetchingProducts(false);
-            });
-    };
-
     useEffect(() => {
+        const fetch = () => {
+            setIsFetchingProducts(true);
+            fetchProducts(offset, pageSize)
+                .then((result) => {
+                    setProducts(result.products);
+                    setTotalNumberOfProducts(result.totalCount);
+                })
+                .finally(() => {
+                    setIsFetchingProducts(false);
+                });
+        };
         fetch();
-    }, [fetch]);
+    }, [offset, pageSize]);
 
     const goToPreviousPage = () => {
         setOffset((prevOffset) => Math.max(0, prevOffset - pageSize));

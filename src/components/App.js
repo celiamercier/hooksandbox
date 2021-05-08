@@ -1,9 +1,14 @@
-import FetchPaginateFunctionalComponentV3 from './pagination/answers/FetchPaginateFunctionalComponentV3';
+import {
+    CounterDemoClassComponent,
+    CounterDemoFunctionalComponent,
+    CounterDemoFunctionalComponentAsClass
+} from './counter/CounterDemo';
 
 export default function App() {
     return (
         <div>
-            <FetchPaginateFunctionalComponentV3/>
+            <CounterDemoClassComponent/>
+            <CounterDemoFunctionalComponent/>
         </div>
     );
 }

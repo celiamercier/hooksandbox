@@ -7,14 +7,14 @@ function Counter() {
         console.log('use effect');
         const intervalRef = setInterval(() => {
             console.log('increment counter');
-            setCount(count + 1);
+            setCount(count => count + 1);
         }, 1000);
 
-        return () => {
+        /*return () => {
             console.log('cleanup');
             clearInterval(intervalRef);
-        };
-    }, [count]);
+        };*/
+    }, []);
 
     console.log('render');
     return (<p>counter: {count}</p>);
