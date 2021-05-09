@@ -1,14 +1,9 @@
-import {
-    CounterDemoClassComponent,
-    CounterDemoFunctionalComponent,
-    CounterDemoFunctionalComponentAsClass
-} from './counter/CounterDemo';
+import FetchPaginateComponentClass from './pagination/FetchPaginateComponentClass';
 
 export default function App() {
     return (
         <div>
-            <CounterDemoClassComponent/>
-            <CounterDemoFunctionalComponent/>
+            <FetchPaginateComponentClass/>
         </div>
     );
 }

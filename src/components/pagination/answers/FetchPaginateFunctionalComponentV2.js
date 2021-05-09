@@ -55,12 +55,14 @@ function useAsyncFetch(fetchCallback, itemsSelector) {
     const [ items, setItems ] = useState([]);
     const [ isFetchingProducts, setIsFetchingProducts ] = useState(false);
 
-    const fetch = useCallback((offset, pageSize) => {
+    const fetch = useCallback((offset, pageSize, didCancel = {value: false}) => {
         setIsFetchingProducts(true);
         fetchCallback(offset, pageSize)
             .then((result) => {
-                setItems(itemsSelector(result));
-                setTotalCount(result.totalCount);
+                if (!didCancel.value) {
+                    setItems(itemsSelector(result));
+                    setTotalCount(result.totalCount);
+                }
             })
             .finally(() => {
                 setIsFetchingProducts(false);
@@ -96,7 +98,9 @@ export default function FetchPaginateFunctionalComponentV2() {
           } = usePagination(page.totalCount);
 
     useEffect(() => {
-        fetch(pagination.offset, pagination.pageSize);
+        let didCancel = { value: false };
+        fetch(pagination.offset, pagination.pageSize, didCancel);
+        return () => { didCancel.value = true };
     }, [fetch, pagination]);
 
     console.log('render');

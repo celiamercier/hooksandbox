@@ -2,7 +2,7 @@ import {Button, ButtonGroup, Col, Container, Form, Row} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faAngleLeft, faAngleRight} from '@fortawesome/free-solid-svg-icons';
 import ProductTable from '../table/ProductTable';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import fetchProducts from '../mock/fetchProducts';
 
 import '../FetchPaginateStyle.css';
@@ -21,18 +21,22 @@ export default function FetchPaginateFunctionalComponentV1() {
     const [ isFetchingProducts, setIsFetchingProducts ] = useState(false);
 
     useEffect(() => {
+        let didCancel = false;
         const fetch = () => {
             setIsFetchingProducts(true);
             fetchProducts(offset, pageSize)
                 .then((result) => {
-                    setProducts(result.products);
-                    setTotalNumberOfProducts(result.totalCount);
+                    if (!didCancel) {
+                        setProducts(result.products);
+                        setTotalNumberOfProducts(result.totalCount);
+                    }
                 })
                 .finally(() => {
                     setIsFetchingProducts(false);
                 });
         };
         fetch();
+        return () => { didCancel = true; };
     }, [offset, pageSize]);
 
     const goToPreviousPage = () => {
